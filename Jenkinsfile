@@ -24,4 +24,44 @@ pipeline {
             }
         }
 
-        stage('
+        stage('Login to Amazon ECR') {
+            steps {
+                script {
+                    // Authenticate Docker to ECR
+                    sh '''
+                    $(aws ecr get-login --no-include-email --region $AWS_REGION)
+                    '''
+                }
+            }
+        }
+
+        stage('Push Image to ECR') {
+            steps {
+                script {
+                    // Tag and push the image to ECR
+                    sh '''
+                    docker tag $ECR_REPO:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+                    docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                script {
+                    // Get kubeconfig for the EKS cluster
+                    sh '''
+                    aws eks --region $AWS_REGION update-kubeconfig --name $EKS_CLUSTER
+                    '''
+
+                    // Apply Kubernetes deployment and service files to deploy the app
+                    sh '''
+                    kubectl apply -f k8s/deployment.yaml
+                    kubectl apply -f k8s/service.yaml
+                    '''
+                }
+            }
+        }
+    }
+}
