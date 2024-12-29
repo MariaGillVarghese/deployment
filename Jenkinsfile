@@ -9,6 +9,11 @@ pipeline {
     }
 
     stages {
+        {
+            steps {
+                cleanWs()
+            }
+        }
     
 
         stage('Build Docker Image') {
