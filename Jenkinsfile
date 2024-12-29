@@ -9,11 +9,15 @@ pipeline {
     }
 
     stages {
-        stage('Clean Workspace') { // Correct stage definition
+        stage('Debug Workspace') {
             steps {
-                cleanWs()
-            }
+                script {
+                    sh 'ls -l'
+                    sh 'pwd'
         }
+    }
+}
+
 
         stage('Build Docker Image') {
             steps {
