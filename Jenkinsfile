@@ -9,12 +9,7 @@ pipeline {
     }
 
     stages {
-        stage('Checkout Code') {
-            steps {
-                // Clone the repository where your app is located
-                git 'https://github.com/MariaGillVarghese/deployment.git'  // Replace with your repo
-            }
-        }
+    
 
         stage('Build Docker Image') {
             steps {
