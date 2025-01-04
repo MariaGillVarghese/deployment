@@ -62,7 +62,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                    docker exec helm_env sh -c 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
+                    docker exec helm_env sh -c 'docker build -t $IMAGE_NAME:$IMAGE_TAG ./repo/.'
                     """
                 }
             }
@@ -84,8 +84,10 @@ pipeline {
             steps {
                 script {
                     sh """
-                    docker exec helm_env sh -c 'kubectl apply -f k8s/deployment.yaml'
-                    docker exec helm_env sh -c 'kubectl apply -f k8s/service.yaml'
+                    docker exec helm_env sh -c 'kubectl get namespace testnamespace || kubectl create namespace testnamespace'
+
+                    docker exec helm_env sh -c 'kubectl apply -f repo/k8s/deployment.yaml -n testnamespace'
+                    docker exec helm_env sh -c 'kubectl apply -f repo/k8s/service.yaml -n testnamespace'
                     """
                 }
             }
