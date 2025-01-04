@@ -1,11 +1,17 @@
 pipeline {
     agent any
+    parameters {
+        choice(name: 'ENVIRONMENT', choices: ['dev'], description: 'Select the target environment')
+    }
 
     environment {
-        AWS_REGION = 'eu-north-1'  // Change to your AWS region
-        ECR_REPO = 'my_repo'  // Replace with your ECR repository
-        EKS_CLUSTER = 'eks-cluster'  // Replace with your EKS cluster name
-        IMAGE_TAG = 'latest'
+        GIT_REPO = 'https://github.com/MariaGillVarghese/deployment.git' 
+        GIT_BRANCH = 'main'
+        
+        IMAGE_NAME = 'docker.avitech-ag.intra/aviview/alpine:latest'
+        KUBECONFIG_PATH = "/home/my_jenkins_home/.kube/config-aviview-${params.ENVIRONMENT}"
+        KNOWN_HOSTS_PATH = '/home/my_jenkins_home/.ssh/known_hosts'
+        IMAGE_TAG = 'latest' 
     }
 
     stages {
@@ -14,58 +20,81 @@ pipeline {
                 script {
                     sh 'ls -l'
                     sh 'pwd'
+                }
+            }
         }
+            stage('Prepare Helm Environment') {
+            steps {
+                script {
+                    
+                        sh """
+                        # Create a Docker container and keep it running
+                        docker run -d --name helm_env \\
+                        -v ${env.KUBECONFIG_PATH}:/root/.kube/config \\
+                        -v ${env.KNOWN_HOSTS_PATH}:/root/.ssh/known_hosts \\
+                        -v /var/run/docker.sock:/var/run/docker.sock \\
+                        ${env.DEPLOY_IMAGE} sleep infinity
+
+                        docker exec helm_env sh -c "apk update && apk add --no-cache git curl"
+                        
+                        # Fetch the latest release version of kubectl
+                        docker exec helm_env sh -c "curl -LO 'https://dl.k8s.io/release/\$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl'"
+                        docker exec helm_env sh -c "chmod +x ./kubectl && mv ./kubectl /usr/local/bin/kubectl"
+
+                       
+
+
+                        # Clone the repository directly into the container
+                        docker exec helm_env git -c http.sslVerify=false clone -b ${GIT_BRANCH} ${GIT_REPO} /repo
+
+                        
+
+                        """
+                    
+                }
+            }
+        }
+        stage('Print cloned folder') {
+            steps {
+                script {
+                    docker exec helm_env sh -c 'ls ./repo'
+                }
+            }
+        }
+
+      /*  stage('Build Docker Image') {
+            steps {
+                script {
+                    sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
+                }
+            }
+        }
+
+        stage('Push Image to Docker Hub') {
+            steps {
+                script {
+                    withDockerRegistry([url: "https://index.docker.io/v1/", credentialsId: 'dockerhub-credentials']) {
+                        sh 'docker push $IMAGE_NAME:$IMAGE_TAG'
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    sh 'kubectl apply -f k8s/deployment.yaml'
+                    sh 'kubectl apply -f k8s/service.yaml'
+                }
+            }
+        }
+        */
+        
     }
-}
-
-
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    // Build Docker image
-                    sh 'docker build -t $ECR_REPO:$IMAGE_TAG .'
-                }
-            }
-        }
-
-        stage('Login to Amazon ECR') {
-            steps {
-                script {
-                    // Authenticate Docker to ECR
-                    sh '''
-                    $(aws ecr get-login --no-include-email --region $AWS_REGION)
-                    '''
-                }
-            }
-        }
-
-        stage('Push Image to ECR') {
-            steps {
-                script {
-                    // Tag and push the image to ECR
-                    sh '''
-                    docker tag $ECR_REPO:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
-                    docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
-                    '''
-                }
-            }
-        }
-
-        stage('Deploy to EKS') {
-            steps {
-                script {
-                    // Get kubeconfig for the EKS cluster
-                    sh '''
-                    aws eks --region $AWS_REGION update-kubeconfig --name $EKS_CLUSTER
-                    '''
-
-                    // Apply Kubernetes deployment and service files to deploy the app
-                    sh '''
-                    kubectl apply -f k8s/deployment.yaml
-                    kubectl apply -f k8s/service.yaml
-                    '''
-                }
-            }
+     post {
+        always {
+            sh "docker stop helm_env || true"
+            sh "docker rm helm_env || true"
         }
     }
 }
