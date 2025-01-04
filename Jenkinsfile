@@ -29,6 +29,7 @@ pipeline {
                         ${env.DEPLOY_IMAGE} sleep infinity
 
                         docker exec helm_env sh -c "apk update && apk add --no-cache git curl"
+                        docker exec helm_env sh -c "apk add --no-cache docker-cli"
                         
                         # Fetch the latest release version of kubectl
                         docker exec helm_env sh -c "curl -LO 'https://dl.k8s.io/release/\$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl'"
