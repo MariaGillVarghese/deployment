@@ -7,7 +7,7 @@ pipeline {
     environment {
         GIT_REPO = 'https://github.com/MariaGillVarghese/deployment.git' 
         GIT_BRANCH = 'main'
-        
+        IMAGE_NAME = 'mariagill321/deploymentapp'
         DEPLOY_IMAGE = 'docker.avitech-ag.intra/aviview/alpine:latest'
         KUBECONFIG_PATH = "/home/my_jenkins_home/.kube/config-aviview-${params.ENVIRONMENT}"
         KNOWN_HOSTS_PATH = '/home/my_jenkins_home/.ssh/known_hosts'
@@ -57,10 +57,12 @@ pipeline {
             }
         }
 
-      /*  stage('Build Docker Image') {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
+                    sh """
+                    docker exec helm_env sh -c 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
+                    """
                 }
             }
         }
@@ -69,7 +71,9 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry([url: "https://index.docker.io/v1/", credentialsId: 'dockerhub-credentials']) {
-                        sh 'docker push $IMAGE_NAME:$IMAGE_TAG'
+                        sh """
+                        docker exec helm_env sh -c  'docker push $IMAGE_NAME:$IMAGE_TAG'
+                        """
                     }
                 }
             }
@@ -78,12 +82,14 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    sh 'kubectl apply -f k8s/deployment.yaml'
-                    sh 'kubectl apply -f k8s/service.yaml'
+                    sh """
+                    docker exec helm_env sh -c 'kubectl apply -f k8s/deployment.yaml'
+                    docker exec helm_env sh -c 'kubectl apply -f k8s/service.yaml'
+                    """
                 }
             }
         }
-        */
+        
         
     }
      post {
