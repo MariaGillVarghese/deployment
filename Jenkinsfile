@@ -8,21 +8,14 @@ pipeline {
         GIT_REPO = 'https://github.com/MariaGillVarghese/deployment.git' 
         GIT_BRANCH = 'main'
         
-        IMAGE_NAME = 'docker.avitech-ag.intra/aviview/alpine:latest'
+        DEPLOY_IMAGE = 'docker.avitech-ag.intra/aviview/alpine:latest'
         KUBECONFIG_PATH = "/home/my_jenkins_home/.kube/config-aviview-${params.ENVIRONMENT}"
         KNOWN_HOSTS_PATH = '/home/my_jenkins_home/.ssh/known_hosts'
         IMAGE_TAG = 'latest' 
     }
 
     stages {
-        stage('Debug Workspace') {
-            steps {
-                script {
-                    sh 'ls -l'
-                    sh 'pwd'
-                }
-            }
-        }
+       
             stage('Prepare Helm Environment') {
             steps {
                 script {
