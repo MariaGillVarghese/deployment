@@ -50,7 +50,9 @@ pipeline {
         stage('Print cloned folder') {
             steps {
                 script {
+                     sh """
                     docker exec helm_env sh -c 'ls ./repo'
+                    """
                 }
             }
         }
