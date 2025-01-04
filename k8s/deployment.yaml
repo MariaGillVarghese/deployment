@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: python-flask-app
-        image: 381492022241.dkr.ecr.eu-north-1.amazonaws.com/my_repo:latest  # Replace with your ECR image URL
+        image: docker.avitech-ag.intra/aviview/deploymentapp:latest  # Replace with your ECR image URL
         ports:
         - containerPort: 5000
