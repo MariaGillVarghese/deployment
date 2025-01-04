@@ -71,8 +71,9 @@ pipeline {
         stage('Push Image to Docker Hub') {
             steps {
                 script {
-                    withDockerRegistry([url: "https://index.docker.io/v1/", credentialsId: 'dockerhub-credentials']) {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', passwordVariable: 'DOCKER_HUB_PASSWORD', usernameVariable: 'DOCKER_HUB_USERNAME')]) {
                         sh """
+                        docker exec helm_env sh -c 'echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin'
                         docker exec helm_env sh -c  'docker push $IMAGE_NAME:$IMAGE_TAG'
                         """
                     }
