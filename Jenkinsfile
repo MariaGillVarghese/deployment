@@ -7,8 +7,8 @@ pipeline {
     environment {
         GIT_REPO = 'https://github.com/MariaGillVarghese/deployment.git' 
         GIT_BRANCH = 'main'
-        IMAGE_NAME = 'docker.avitech-ag.intra/aviview/deploymentapp'
-        DEPLOY_IMAGE = 'docker.avitech-ag.intra/aviview/alpine:latest'
+        IMAGE_NAME = 'mariagill321/deploymentapp'
+        DEPLOY_IMAGE = 'alpine:latest'
         KUBECONFIG_PATH = "/home/my_jenkins_home/.kube/config-aviview-${params.ENVIRONMENT}"
         KNOWN_HOSTS_PATH = '/home/my_jenkins_home/.ssh/known_hosts'
         IMAGE_TAG = 'latest' 
@@ -73,7 +73,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', passwordVariable: 'DOCKER_HUB_PASSWORD', usernameVariable: 'DOCKER_HUB_USERNAME')]) {
                         sh """
-                        docker exec helm_env sh -c 'echo Um0dMOaACZhUGKWajuXd7tWRFbpsWbiF | docker login https://docker.avitech-ag.intra/harbor/ -u Gill_Varghese_Varghese_Sajan --password-stdin'
+                        docker exec helm_env sh -c 'echo GillVarghese25@ | docker login -u mariagill321 --password-stdin'
                         docker exec helm_env sh -c  'docker push $IMAGE_NAME:$IMAGE_TAG'
                         """
                     }
