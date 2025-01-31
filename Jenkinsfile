@@ -73,7 +73,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', passwordVariable: 'DOCKER_HUB_PASSWORD', usernameVariable: 'DOCKER_HUB_USERNAME')]) {
                         sh """
-                        docker exec helm_env sh -c 'echo GillVarghese25@ | docker login -u mariagill321 --password-stdin'
+                        docker exec helm_env sh -c 'echo testdkjvnsjdhfv | docker login -u mariagill321 --password-stdin'
                         docker exec helm_env sh -c  'docker push $IMAGE_NAME:$IMAGE_TAG'
                         """
                     }
